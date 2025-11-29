@@ -1,0 +1,15 @@
+[Unit]
+Description=Aether AI Platform
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/aether
+ExecStart=/usr/bin/npx serve dist -l 3000
+Restart=always
+Environment=NODE_ENV=production
+Environment=GEMINI_API_KEY=your-gemini-api-key-here
+
+[Install]
+WantedBy=multi-user.target
