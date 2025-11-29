@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  aether-frontend:
+    build: .
+    container_name: aether-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - GEMINI_API_KEY=your-gemini-api-key-here
+    restart: unless-stopped
+    networks:
+      - aether-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: aether-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl-certs:/etc/nginx/ssl  # For SSL certificates
+    depends_on:
+      - aether-frontend
+    restart: unless-stopped
+    networks:
+      - aether-network
+
+networks:
+  aether-network:
+    driver: bridge
