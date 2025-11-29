@@ -12,6 +12,18 @@ const saveToStorage = (key: string, value: any) => {
   localStorage.setItem(key, JSON.stringify(value));
 };
 
+// Safe UUID generator that works in non-secure contexts (HTTP)
+const generateId = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Fallback for insecure contexts (e.g. HTTP IP address)
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 // --- Config ---
 
 export const getConfig = (): AppConfig => {
@@ -94,14 +106,14 @@ export const createRequest = (userId: string, prompt: string, type: MediaType): 
   expiresAt.setDate(now.getDate() + config.retentionDays);
 
   const req: GenerationRequest = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     userId,
     prompt,
     type,
     status: RequestStatus.PENDING,
     createdAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),
-    localPath: `/var/www/project/storage/outputs/${crypto.randomUUID()}.${type === MediaType.IMAGE ? 'png' : 'mp4'}`
+    localPath: `/var/www/project/storage/outputs/${generateId()}.${type === MediaType.IMAGE ? 'png' : 'mp4'}`
   };
 
   const requests = getFromStorage<GenerationRequest[]>(STORAGE_KEY_REQUESTS, []);
