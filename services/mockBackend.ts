@@ -1,5 +1,6 @@
-import { User, GenerationRequest, AppConfig, RequestStatus, MediaType, UserRole } from '../types';
-import { STORAGE_KEY_USERS, STORAGE_KEY_REQUESTS, STORAGE_KEY_CONFIG, DEFAULT_ADMIN_USER, DEFAULT_USER } from '../constants';
+import { User, GenerationRequest, AppConfig, RequestStatus, MediaType, UserRole, AIModel } from '../types';
+import { STORAGE_KEY_USERS, STORAGE_KEY_REQUESTS, STORAGE_KEY_CONFIG, STORAGE_KEY_CURRENT_USER, STORAGE_KEY_MODELS, DEFAULT_ADMIN_USER, DEFAULT_USER } from '../constants';
+import { DEFAULT_MODELS } from '../modelConfig';
 
 // --- Helpers ---
 
@@ -36,6 +37,43 @@ export const getConfig = (): AppConfig => {
 
 export const updateConfig = (newConfig: AppConfig) => {
   saveToStorage(STORAGE_KEY_CONFIG, newConfig);
+};
+
+// --- AI Model Management ---
+
+export const getModels = (): AIModel[] => {
+  let models = getFromStorage<AIModel[]>(STORAGE_KEY_MODELS, []);
+  if (models.length === 0) {
+    // Seed initial models
+    models = DEFAULT_MODELS;
+    saveToStorage(STORAGE_KEY_MODELS, models);
+  }
+  return models;
+};
+
+export const createModel = (model: Omit<AIModel, 'id'>): AIModel => {
+  const models = getModels();
+  const newModel: AIModel = {
+    ...model,
+    id: generateId()
+  };
+  models.push(newModel);
+  saveToStorage(STORAGE_KEY_MODELS, models);
+  return newModel;
+};
+
+export const updateModel = (modelId: string, updates: Partial<AIModel>) => {
+  const models = getModels();
+  const updated = models.map(model => 
+    model.id === modelId ? { ...model, ...updates } : model
+  );
+  saveToStorage(STORAGE_KEY_MODELS, updated);
+};
+
+export const deleteModel = (modelId: string) => {
+  const models = getModels();
+  const updated = models.filter(model => model.id !== modelId);
+  saveToStorage(STORAGE_KEY_MODELS, updated);
 };
 
 // --- Retention Logic (Cron Job Simulation) ---
@@ -99,7 +137,7 @@ export const getRequests = (userId?: string): GenerationRequest[] => {
   return requests.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 };
 
-export const createRequest = (userId: string, prompt: string, type: MediaType): GenerationRequest => {
+export const createRequest = (userId: string, prompt: string, type: MediaType, modelId: string, duration?: number, cfgScale?: number, sourceImage?: string): GenerationRequest => {
   const config = getConfig();
   const now = new Date();
   const expiresAt = new Date();
@@ -110,6 +148,10 @@ export const createRequest = (userId: string, prompt: string, type: MediaType): 
     userId,
     prompt,
     type,
+    modelId, // Add the model ID
+    duration, // Add duration if provided
+    cfgScale, // Add cfgScale if provided
+    sourceImage, // Add source image if provided
     status: RequestStatus.PENDING,
     createdAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),

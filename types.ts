@@ -42,3 +42,32 @@ export interface AppConfig {
   costPerImage: number;
   costPerVideo: number;
 }
+
+export interface AIModel {
+  id: string;
+  name: string;
+  description: string;
+  costPerGeneration: number;
+  maxDuration: number;
+  supportsImageToVideo: boolean;
+  supportsTextToVideo: boolean;
+  defaultDuration: number;
+  defaultCfgScale: number;
+  isActive: boolean;
+}
+
+export interface GenerationRequest {
+  id: string;
+  userId: string;
+  prompt: string;
+  type: MediaType;
+  status: RequestStatus;
+  outputUrl?: string;
+  createdAt: string;
+  expiresAt: string;
+  localPath?: string;
+  modelId: string; // Add model ID to track which model was used
+  duration?: number; // Video duration if applicable
+  cfgScale?: number; // Configuration scale if applicable
+  sourceImage?: string; // URL of source image if image-to-video
+}

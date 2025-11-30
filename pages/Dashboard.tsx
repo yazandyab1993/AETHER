@@ -1,16 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { User, GenerationRequest, RequestStatus } from '../types';
-import { getRequests } from '../services/mockBackend';
+import { User, GenerationRequest, RequestStatus, AIModel } from '../types';
+import { getRequests, getModels } from '../services/mockBackend';
 import { Card, Badge, Button } from '../components/UI';
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = ({ user }: { user: User }) => {
   const [requests, setRequests] = useState<GenerationRequest[]>([]);
+  const [models, setModels] = useState<AIModel[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     setRequests(getRequests(user.id));
+    setModels(getModels());
   }, [user.id]);
+
+  // Helper function to get model name by ID
+  const getModelName = (modelId: string) => {
+    const model = models.find(m => m.id === modelId);
+    return model ? model.name : 'Unknown Model';
+  };
 
   return (
     <div className="space-y-8">
@@ -102,6 +110,11 @@ export const Dashboard = ({ user }: { user: User }) => {
                   <p className="text-sm text-gray-300 line-clamp-2 mb-2" title={req.prompt}>
                     {req.prompt}
                   </p>
+                  
+                  {/* Model information */}
+                  <div className="text-xs text-gray-500 mb-2">
+                    <span className="font-medium">Model:</span> {getModelName(req.modelId)}
+                  </div>
                   
                   {req.status === RequestStatus.COMPLETED && (
                     <div className="text-xs text-gray-500 mt-2 border-t border-white/5 pt-2 flex justify-between">

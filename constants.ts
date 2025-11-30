@@ -6,6 +6,7 @@ export const STORAGE_KEY_USERS = "aether_users";
 export const STORAGE_KEY_REQUESTS = "aether_requests";
 export const STORAGE_KEY_CONFIG = "aether_config";
 export const STORAGE_KEY_CURRENT_USER = "aether_current_user";
+export const STORAGE_KEY_MODELS = "aether_models";
 
 // Mock Data Initializer
 export const DEFAULT_ADMIN_USER = {
